@@ -71,7 +71,7 @@ private:
         using namespace std::placeholders;
         // this needs to return quickly to avoid blocking the executor, so spin up a new thread
         RCLCPP_INFO(this->get_logger(), "Accepted a goal");
-        execute(goal_handle);
+        std::thread{std::bind(&MG400ControlNode::execute, this, _1), goal_handle}.detach();
       };
     
 
@@ -80,17 +80,17 @@ private:
     {
         RCLCPP_INFO(this->get_logger(), "run_mg400 service is called");
 
-        // Clear error
-        auto clear_error_request = std::make_shared<mg400_msgs::srv::ClearError::Request>();
-        auto clear_error_response_future = clear_error_client->async_send_request(clear_error_request);
+        // // Clear error
+        // auto clear_error_request = std::make_shared<mg400_msgs::srv::ClearError::Request>();
+        // auto clear_error_response_future = clear_error_client->async_send_request(clear_error_request);
 
-        // Wait for the result
-        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), clear_error_response_future) !=
-            rclcpp::executor::FutureReturnCode::SUCCESS)
-        {
-            RCLCPP_ERROR(this->get_logger(), "Failed to call clear_error service");
-            return;
-        }
+        // // Wait for the result
+        // if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), clear_error_response_future) !=
+        //     rclcpp::executor::FutureReturnCode::SUCCESS)
+        // {
+        //     RCLCPP_ERROR(this->get_logger(), "Failed to call clear_error service");
+        //     return;
+        // }
 
         // auto clear_error_response = clear_error_response_future.get();
         // // RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", clear_error_response->success);
