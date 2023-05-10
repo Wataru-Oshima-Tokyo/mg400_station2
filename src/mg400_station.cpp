@@ -84,7 +84,7 @@ private:
         auto clear_error_response_future = clear_error_client->async_send_request(clear_error_request);
 
         // Wait for the result
-        if (rclcpp::spin_until_future_complete(this->shared_from_this(), clear_error_response_future) !=
+        if (rclcpp::spin_until_future_complete(this->get_node_base_interface()) !=
             rclcpp::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call clear_error service");
