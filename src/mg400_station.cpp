@@ -27,10 +27,10 @@ public:
     {
 
 
-        clear_error_client = this->create_client<mg400_msgs::srv::ClearError>("/mg400/clear_error");
-        enable_robot_client = this->create_client<mg400_msgs::srv::EnableRobot>("/mg400/enable_robot");
-        disable_robot_client = this->create_client<mg400_msgs::srv::DisableRobot>("/mg400/disable_robot");
-        speed_factor_client = this->create_client<mg400_msgs::srv::SpeedFactor>("/mg400/speed_factor");
+        clear_error_client = node->create_client<mg400_msgs::srv::ClearError>("/mg400/clear_error");
+        enable_robot_client = node->create_client<mg400_msgs::srv::EnableRobot>("/mg400/enable_robot");
+        disable_robot_client = node->create_client<mg400_msgs::srv::DisableRobot>("/mg400/disable_robot");
+        speed_factor_client = node->create_client<mg400_msgs::srv::SpeedFactor>("/mg400/speed_factor");
 
         mov_j_action_client = rclcpp_action::create_client<mg400_msgs::action::MovJ>(this, "/mg400/mov_j");
         mov_l_action_client = rclcpp_action::create_client<mg400_msgs::action::MovL>(this, "/mg400/mov_l");
@@ -38,6 +38,7 @@ public:
     }
 
 private:
+    std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("mg400_move_server");
     rclcpp::Client<mg400_msgs::srv::ClearError>::SharedPtr clear_error_client;
     rclcpp::Client<mg400_msgs::srv::EnableRobot>::SharedPtr enable_robot_client;
     rclcpp::Client<mg400_msgs::srv::DisableRobot>::SharedPtr disable_robot_client;
@@ -84,7 +85,7 @@ private:
         auto clear_error_response_future = clear_error_client->async_send_request(clear_error_request);
 
         // Wait for the result
-        if (rclcpp::spin_until_future_complete(this->get_node_base_interface()) !=
+        if (rclcpp::spin_until_future_complete(node, clear_error_response_future) !=
             rclcpp::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call clear_error service");
