@@ -17,9 +17,25 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(mg400_msgs REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(techshare_ros_pkg2 REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
+add_executable(mg400_station src/mg400_station.cpp)
+ament_target_dependencies(mg400_station
+  geometry_msgs
+  rclcpp
+  rclcpp_action
+  mg400_msgs
+  geometry_msgs
+  std_srvs
+  techshare_ros_pkg2
+  )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -31,5 +47,10 @@ if(BUILD_TESTING)
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
-
+install(
+  DIRECTORY
+    launch
+  DESTINATION
+    share/${PROJECT_NAME}/
+)
 ament_package()

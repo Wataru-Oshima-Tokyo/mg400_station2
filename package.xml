@@ -11,7 +11,9 @@
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-
+  <depend>action_msgs</depend>
+  <depend>mg400_msgs</depend>
+  <depend>techshare_ros_pkg2</depend>
   <export>
     <build_type>ament_cmake</build_type>
   </export>
