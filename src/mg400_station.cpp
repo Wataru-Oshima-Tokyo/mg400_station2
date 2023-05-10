@@ -70,6 +70,7 @@ private:
       {
         using namespace std::placeholders;
         // this needs to return quickly to avoid blocking the executor, so spin up a new thread
+        RCLCPP_INFO(this->get_logger(), "Accepted a goal");
         std::thread{std::bind(&MG400ControlNode::execute, this, _1), goal_handle}.detach();
       };
     
