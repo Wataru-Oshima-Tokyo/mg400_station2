@@ -92,49 +92,66 @@ private:
             return;
         }
 
-        // auto clear_error_response = clear_error_response_future.get();
-        // // RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", clear_error_response->success);
-        // RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", 0);
-        // // Enable robot
-        // auto enable_robot_request = std::make_shared<mg400_msgs::srv::EnableRobot::Request>();
-        // auto enable_robot_response_future = enable_robot_client->async_send_request(enable_robot_request);
+        auto clear_error_response = clear_error_response_future.get();
+        // RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", clear_error_response->success);
+        RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", 0);
+        // Enable robot
+        auto enable_robot_request = std::make_shared<mg400_msgs::srv::EnableRobot::Request>();
+        auto enable_robot_response_future = enable_robot_client->async_send_request(enable_robot_request);
 
-        // if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), enable_robot_response_future) !=
-        //     rclcpp::executor::FutureReturnCode::SUCCESS)
-        // {
-        //     RCLCPP_ERROR(this->get_logger(), "Failed to call enable_robot service");
-        //     return;
-        // }
+        if (rclcpp::spin_until_future_complete(node, enable_robot_response_future) !=
+            rclcpp::executor::FutureReturnCode::SUCCESS)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to call enable_robot service");
+            return;
+        }
 
-        // auto enable_robot_response = enable_robot_response_future.get();
-        // // RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", enable_robot_response->success);
-        // RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", 0);
+        auto enable_robot_response = enable_robot_response_future.get();
+        // RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", enable_robot_response->success);
+        RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", 0);
 
-        // // ... Repeat the same for the disable_robot service ...
+        // ... Repeat the same for the disable_robot service ...
 
-        // // Send MovJ action
-        // auto mov_j_goal = mg400_msgs::action::MovJ::Goal();
-        // mov_j_goal.pose.header.frame_id = "mg400_origin_link";
-        // mov_j_goal.pose.pose.position.x = 0.34;
-        // mov_j_goal.pose.pose.orientation.w = 1.0;
+        // Send MovJ action
+        auto mov_j_goal = mg400_msgs::action::MovJ::Goal();
+        mov_j_goal.pose.header.frame_id = "mg400_origin_link";
+        mov_j_goal.pose.pose.position.x = 0.34;
+        mov_j_goal.pose.pose.orientation.w = 1.0;
         
-        // auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
+        auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
 
-        // if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), mov_j_goal_handle_future) !=
-        //     rclcpp::executor::FutureReturnCode::SUCCESS)
-        // {
-        //     RCLCPP_ERROR(this->get_logger(), "Failed to send goal to MovJ action");
-        //     return;
-        // }
+        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), mov_j_goal_handle_future) !=
+            rclcpp::executor::FutureReturnCode::SUCCESS)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to send goal to MovJ action");
+            return;
+        }
 
-        // auto mov_j_goal_handle = mov_j_goal_handle_future.get();
+        auto mov_j_goal_handle = mov_j_goal_handle_future.get();
 
-        // if (!mov_j_goal_handle) {
-        //     RCLCPP_ERROR(this->get_logger(), "Goal was rejected by MovJ action");
-        //     return;
-        // }
+        if (!mov_j_goal_handle) {
+            RCLCPP_ERROR(this->get_logger(), "Goal was rejected by MovJ action");
+            return;
+        }
 
-        // // ... Here you can wait for the result of the MovJ action ...
+        // ... Here you can wait for the result of the MovJ action ...
+
+        auto disable_robot_request = std::make_shared<mg400_msgs::srv::EnableRobot::Request>();
+        auto disable_robot_response_future = disable_robot_client->async_send_request(disable_robot_request);
+
+        if (rclcpp::spin_until_future_complete(node, disable_robot_response_future) !=
+            rclcpp::executor::FutureReturnCode::SUCCESS)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to call enable_robot service");
+            return;
+        }
+
+        auto disable_robot_response = disable_robot_response_future.get();
+        // RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", enable_robot_response->success);
+        RCLCPP_INFO(this->get_logger(), "disable_robot_response: %d", 0);
+
+        // ... Repeat the same for the disable_robot service ...
+
 
         auto result = std::make_shared<techshare_ros_pkg2::action::Empty::Result>();
         result->done = true;
