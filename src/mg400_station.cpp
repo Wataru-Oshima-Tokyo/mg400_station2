@@ -97,6 +97,8 @@ private:
 
         auto clear_error_response = clear_error_response_future.get();
         RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", clear_error_response);
+
+
         // Enable robot
         auto enable_robot_request = std::make_shared<mg400_msgs::srv::EnableRobot::Request>();
         auto enable_robot_response_future = enable_robot_client->async_send_request(enable_robot_request);
@@ -110,9 +112,31 @@ private:
             RCLCPP_INFO(this->get_logger(), "Action failed");
             return;
         }
-
         auto enable_robot_response = enable_robot_response_future.get();
         RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", enable_robot_response);
+
+
+        // Create a request for the SpeedFactor service
+        auto speed_factor_request = std::make_shared<mg400_msgs::srv::SpeedFactor::Request>();
+        speed_factor_request->ratio = 70;  // Set the speed factor ratio to 40
+
+        // Call the SpeedFactor service
+        auto speed_factor_response_future = speed_factor_client->async_send_request(speed_factor_request);
+
+        // Wait for the service response
+        if (rclcpp::spin_until_future_complete(node, speed_factor_response_future) !=
+            rclcpp::executor::FutureReturnCode::SUCCESS)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to call /mg400/speed_factor service");
+            // Handle the error...
+            return;
+        }
+
+        auto speed_factor_response = speed_factor_response_future.get();
+        RCLCPP_INFO(this->get_logger(), "SpeedFactor response: %d", speed_factor_response);
+
+
+
 
         // Send MovJ action
         
@@ -120,7 +144,11 @@ private:
             auto mov_j_goal = mg400_msgs::action::MovJ::Goal();
             mov_j_goal.pose.header.frame_id = "mg400_origin_link";
             mov_j_goal.pose.pose.position.x = 0.25 + 0.01*i;
-            mov_j_goal.pose.pose.orientation.w = 1.0 + 0.1*i;
+            if (i % 2 == 0) {
+                mov_j_goal.pose.pose.orientation.w = 1.0;
+            } else {
+                mov_j_goal.pose.pose.orientation.w = -1.0;
+            }
             
             auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
 
