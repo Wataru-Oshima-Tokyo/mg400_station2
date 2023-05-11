@@ -17,3 +17,11 @@ windows:
       - cd /external
       - source install/setup.bash
       - echo 'ros2 action send_goal /mg400/mg400_server techshare_ros_pkg2/action/Empty fake:\ 0\ '
+  - name: mg400_pose_topic_list
+    commands:
+      - cd ../../..
+      - login_foxy
+      - cd /external
+      - source install/setup.bash
+      - ros2 topic echo /mg400/pose
+  
