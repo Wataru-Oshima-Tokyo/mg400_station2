@@ -32,8 +32,8 @@ public:
         disable_robot_client = node->create_client<mg400_msgs::srv::DisableRobot>("/mg400/disable_robot");
         speed_factor_client = node->create_client<mg400_msgs::srv::SpeedFactor>("/mg400/speed_factor");
 
-        mov_j_action_client = rclcpp_action::create_client<mg400_msgs::action::MovJ>(this, "/mg400/mov_j");
-        mov_l_action_client = rclcpp_action::create_client<mg400_msgs::action::MovL>(this, "/mg400/mov_l");
+        mov_j_action_client = rclcpp_action::create_client<mg400_msgs::action::MovJ>(node, "/mg400/mov_j");
+        mov_l_action_client = rclcpp_action::create_client<mg400_msgs::action::MovL>(node, "/mg400/mov_l");
 
     }
 
@@ -120,7 +120,7 @@ private:
         
         auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
 
-        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), mov_j_goal_handle_future) !=
+        if (rclcpp::spin_until_future_complete(node, mov_j_goal_handle_future) !=
             rclcpp::executor::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to send goal to MovJ action");
@@ -134,9 +134,36 @@ private:
             return;
         }
 
-        // ... Here you can wait for the result of the MovJ action ...
+        auto mov_j_result_future = mov_j_action_client->async_get_result(mov_j_goal_handle);
+        if (rclcpp::spin_until_future_complete(node, mov_j_result_future) !=
+            rclcpp::executor::FutureReturnCode::SUCCESS)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to get result from MovJ action");
+            return;
+        }
 
-        auto disable_robot_request = std::make_shared<mg400_msgs::srv::EnableRobot::Request>();
+        // auto mov_j_result = mov_j_result_future.get();
+        // // if (!mov_j_result)
+        // // {
+        // //     RCLCPP_ERROR(this->get_logger(), "Failed to receive a result from MovJ action");
+        // //     return;
+        // // }
+
+        // // Here you can handle the result
+        // // For example, check if the action has succeeded
+        // if (!mov_j_result.code)
+        // {
+        //     RCLCPP_ERROR(this->get_logger(), "MovJ action failed with result code: %d", 0);
+        //     return;
+        // }
+
+        // If succeeded, you can print some information
+        RCLCPP_INFO(this->get_logger(), "MovJ action succeeded with result code: %d", 0);
+
+
+
+
+        auto disable_robot_request = std::make_shared<mg400_msgs::srv::DisableRobot::Request>();
         auto disable_robot_response_future = disable_robot_client->async_send_request(disable_robot_request);
 
         if (rclcpp::spin_until_future_complete(node, disable_robot_response_future) !=
