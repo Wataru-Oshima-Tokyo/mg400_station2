@@ -128,7 +128,9 @@ private:
             rclcpp::executor::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call /mg400/speed_factor service");
-            // Handle the error...
+            result->done = false;
+            goal_handle->abort(result);
+            RCLCPP_INFO(this->get_logger(), "Action failed");
             return;
         }
 
