@@ -63,6 +63,7 @@ endif()
 
 install(TARGETS
   mg400_station
+  mg400_pose_publisher
   DESTINATION lib/${PROJECT_NAME})
 
 install(
