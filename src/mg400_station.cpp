@@ -119,7 +119,7 @@ private:
         for (int i=0; i<10;i++){
             auto mov_j_goal = mg400_msgs::action::MovJ::Goal();
             mov_j_goal.pose.header.frame_id = "mg400_origin_link";
-            mov_j_goal.pose.pose.position.x = 0.25 + 0.1*i;
+            mov_j_goal.pose.pose.position.x = 0.25 + 0.01*i;
             mov_j_goal.pose.pose.orientation.w = 1.0 + 0.1*i;
             
             auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
