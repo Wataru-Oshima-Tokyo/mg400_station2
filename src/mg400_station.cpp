@@ -115,45 +115,50 @@ private:
         RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", enable_robot_response);
 
         // Send MovJ action
-        auto mov_j_goal = mg400_msgs::action::MovJ::Goal();
-        mov_j_goal.pose.header.frame_id = "mg400_origin_link";
-        mov_j_goal.pose.pose.position.x = 0.34;
-        mov_j_goal.pose.pose.orientation.w = 1.0;
         
-        auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
+        for (int i=0; i<10;i++){
+            auto mov_j_goal = mg400_msgs::action::MovJ::Goal();
+            mov_j_goal.pose.header.frame_id = "mg400_origin_link";
+            mov_j_goal.pose.pose.position.x = 0.2 + i;
+            mov_j_goal.pose.pose.orientation.w = 1.0 + 0.1*i;
+            
+            auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
 
-        if (rclcpp::spin_until_future_complete(node, mov_j_goal_handle_future) !=
-            rclcpp::executor::FutureReturnCode::SUCCESS)
-        {
-            RCLCPP_ERROR(this->get_logger(), "Failed to send goal to MovJ action");
-            result->done = false;
-            goal_handle->abort(result);
-            RCLCPP_ERROR(this->get_logger(), "Action failed");
-            return;
+            if (rclcpp::spin_until_future_complete(node, mov_j_goal_handle_future) !=
+                rclcpp::executor::FutureReturnCode::SUCCESS)
+            {
+                RCLCPP_ERROR(this->get_logger(), "Failed to send goal to MovJ action");
+                result->done = false;
+                goal_handle->abort(result);
+                RCLCPP_ERROR(this->get_logger(), "Action failed");
+                return;
+            }
+
+            auto mov_j_goal_handle = mov_j_goal_handle_future.get();
+
+            if (!mov_j_goal_handle) {
+                RCLCPP_ERROR(this->get_logger(), "Goal was rejected by MovJ action");
+                result->done = false;
+                goal_handle->abort(result);
+                RCLCPP_ERROR(this->get_logger(), "Action failed");
+                return;
+            }
+
+            auto mov_j_result_future = mov_j_action_client->async_get_result(mov_j_goal_handle);
+            if (rclcpp::spin_until_future_complete(node, mov_j_result_future) !=
+                rclcpp::executor::FutureReturnCode::SUCCESS)
+            {
+                RCLCPP_ERROR(this->get_logger(), "Failed to get result from MovJ action");
+                result->done = false;
+                goal_handle->abort(result);
+                RCLCPP_ERROR(this->get_logger(), "Action failed");
+                return;
+            }
+
+            RCLCPP_INFO(this->get_logger(), "MovJ action succeeded with result code: %d", mov_j_result_future);
+            rclcpp::sleep_for(std::chrono::seconds(2));
         }
 
-        auto mov_j_goal_handle = mov_j_goal_handle_future.get();
-
-        if (!mov_j_goal_handle) {
-            RCLCPP_ERROR(this->get_logger(), "Goal was rejected by MovJ action");
-            result->done = false;
-            goal_handle->abort(result);
-            RCLCPP_ERROR(this->get_logger(), "Action failed");
-            return;
-        }
-
-        auto mov_j_result_future = mov_j_action_client->async_get_result(mov_j_goal_handle);
-        if (rclcpp::spin_until_future_complete(node, mov_j_result_future) !=
-            rclcpp::executor::FutureReturnCode::SUCCESS)
-        {
-            RCLCPP_ERROR(this->get_logger(), "Failed to get result from MovJ action");
-            result->done = false;
-            goal_handle->abort(result);
-            RCLCPP_ERROR(this->get_logger(), "Action failed");
-            return;
-        }
-
-        RCLCPP_INFO(this->get_logger(), "MovJ action succeeded with result code: %d", mov_j_result_future);
 
 
         auto disable_robot_request = std::make_shared<mg400_msgs::srv::DisableRobot::Request>();
