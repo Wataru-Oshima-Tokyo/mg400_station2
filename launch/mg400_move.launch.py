@@ -91,12 +91,19 @@ def generate_launch_description():
         executable='mg400_station',
         namespace=ns,
         output='log')
+    
+    pose_publisher = Node(
+        package='mg400_station2',
+        executable='mg400_pose_publisher',
+        namespace=ns,
+        output='log')
 
     ld = LaunchDescription()
     ld.add_action(ns_arg)
     ld.add_action(joy_arg)
     ld.add_action(ip_address_arg)
     ld.add_action(move_command)
+    ld.add_action(pose_publisher)
     ld.add_action(mg400_node)
     ld.add_action(rsp_node)
     ld.add_action(joy_node)

@@ -79,7 +79,7 @@ private:
 
     void execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle)
     {
-
+        auto result = std::make_shared<techshare_ros_pkg2::action::Empty::Result>();
         // // Clear error
         auto clear_error_request = std::make_shared<mg400_msgs::srv::ClearError::Request>();
         auto clear_error_response_future = clear_error_client->async_send_request(clear_error_request);
@@ -89,12 +89,14 @@ private:
             rclcpp::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call clear_error service");
+            result->done = false;
+            goal_handle->abort(result);
+            RCLCPP_INFO(this->get_logger(), "Action failed");
             return;
         }
 
         auto clear_error_response = clear_error_response_future.get();
-        // RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", clear_error_response->success);
-        RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", 0);
+        RCLCPP_INFO(this->get_logger(), "clear_error_response: %d", clear_error_response);
         // Enable robot
         auto enable_robot_request = std::make_shared<mg400_msgs::srv::EnableRobot::Request>();
         auto enable_robot_response_future = enable_robot_client->async_send_request(enable_robot_request);
@@ -103,14 +105,14 @@ private:
             rclcpp::executor::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call enable_robot service");
+            result->done = false;
+            goal_handle->abort(result);
+            RCLCPP_INFO(this->get_logger(), "Action failed");
             return;
         }
 
         auto enable_robot_response = enable_robot_response_future.get();
-        // RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", enable_robot_response->success);
-        RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", 0);
-
-        // ... Repeat the same for the disable_robot service ...
+        RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", enable_robot_response);
 
         // Send MovJ action
         auto mov_j_goal = mg400_msgs::action::MovJ::Goal();
@@ -124,6 +126,9 @@ private:
             rclcpp::executor::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to send goal to MovJ action");
+            result->done = false;
+            goal_handle->abort(result);
+            RCLCPP_ERROR(this->get_logger(), "Action failed");
             return;
         }
 
@@ -131,6 +136,9 @@ private:
 
         if (!mov_j_goal_handle) {
             RCLCPP_ERROR(this->get_logger(), "Goal was rejected by MovJ action");
+            result->done = false;
+            goal_handle->abort(result);
+            RCLCPP_ERROR(this->get_logger(), "Action failed");
             return;
         }
 
@@ -139,28 +147,13 @@ private:
             rclcpp::executor::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to get result from MovJ action");
+            result->done = false;
+            goal_handle->abort(result);
+            RCLCPP_ERROR(this->get_logger(), "Action failed");
             return;
         }
 
-        // auto mov_j_result = mov_j_result_future.get();
-        // // if (!mov_j_result)
-        // // {
-        // //     RCLCPP_ERROR(this->get_logger(), "Failed to receive a result from MovJ action");
-        // //     return;
-        // // }
-
-        // // Here you can handle the result
-        // // For example, check if the action has succeeded
-        // if (!mov_j_result.code)
-        // {
-        //     RCLCPP_ERROR(this->get_logger(), "MovJ action failed with result code: %d", 0);
-        //     return;
-        // }
-
-        // If succeeded, you can print some information
-        RCLCPP_INFO(this->get_logger(), "MovJ action succeeded with result code: %d", 0);
-
-
+        RCLCPP_INFO(this->get_logger(), "MovJ action succeeded with result code: %d", mov_j_result_future);
 
 
         auto disable_robot_request = std::make_shared<mg400_msgs::srv::DisableRobot::Request>();
@@ -170,17 +163,18 @@ private:
             rclcpp::executor::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call enable_robot service");
+            result->done = false;
+            goal_handle->abort(result);
+            RCLCPP_ERROR(this->get_logger(), "Action failed");
             return;
         }
 
+        //diable here
         auto disable_robot_response = disable_robot_response_future.get();
-        // RCLCPP_INFO(this->get_logger(), "enable_robot_response: %d", enable_robot_response->success);
-        RCLCPP_INFO(this->get_logger(), "disable_robot_response: %d", 0);
-
-        // ... Repeat the same for the disable_robot service ...
+        RCLCPP_INFO(this->get_logger(), "disable_robot_response: %d", disable_robot_response);
 
 
-        auto result = std::make_shared<techshare_ros_pkg2::action::Empty::Result>();
+        
         result->done = true;
         goal_handle->succeed(result);
         RCLCPP_INFO(this->get_logger(), "Action completed");

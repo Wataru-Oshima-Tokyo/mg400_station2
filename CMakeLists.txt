@@ -22,6 +22,7 @@ find_package(std_srvs REQUIRED)
 find_package(mg400_msgs REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(techshare_ros_pkg2 REQUIRED)
+find_package(mg400_interface REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -36,6 +37,18 @@ ament_target_dependencies(mg400_station
   std_srvs
   techshare_ros_pkg2
   )
+
+add_executable(mg400_pose_publisher src/mg400_pose_publisher.cpp)
+  ament_target_dependencies(mg400_pose_publisher
+    geometry_msgs
+    rclcpp
+    rclcpp_action
+    mg400_msgs
+    mg400_interface
+    geometry_msgs
+    std_srvs
+    techshare_ros_pkg2
+    )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
