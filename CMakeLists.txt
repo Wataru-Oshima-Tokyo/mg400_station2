@@ -37,6 +37,9 @@ ament_target_dependencies(mg400_station
   std_srvs
   techshare_ros_pkg2
   )
+# target_link_libraries(mg400_station ${PROJECT_NAME})
+target_include_directories(
+  mg400_station PRIVATE include)
 
 add_executable(mg400_pose_publisher src/mg400_pose_publisher.cpp)
   ament_target_dependencies(mg400_pose_publisher
@@ -49,7 +52,7 @@ add_executable(mg400_pose_publisher src/mg400_pose_publisher.cpp)
     std_srvs
     techshare_ros_pkg2
     )
-
+# target_link_libraries(mg400_pose_publisher ${PROJECT_NAME})
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -68,6 +71,7 @@ install(TARGETS
 
 install(
   DIRECTORY
+    include
     launch
   DESTINATION
     share/${PROJECT_NAME}/
