@@ -20,7 +20,7 @@ class MG400ControlNode : public rclcpp::Node
 {
 public:
     MG400ControlNode();
-    Quaternion YawToQuaternion(double);
+    
 private:
     std::shared_ptr<rclcpp::Node> node;
     rclcpp::Client<mg400_msgs::srv::ClearError>::SharedPtr clear_error_client;
@@ -43,4 +43,5 @@ private:
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle);
 
     void execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle);
+    Quaternion YawToQuaternion(double);
 };

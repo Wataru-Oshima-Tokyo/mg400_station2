@@ -1,64 +1,95 @@
-#include "mg400_station2/mg400_station.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_srvs/srv/empty.hpp"
+#include "mg400_msgs/srv/clear_error.hpp"
+#include "mg400_msgs/srv/enable_robot.hpp"
+#include "mg400_msgs/srv/disable_robot.hpp"
+#include "mg400_msgs/srv/speed_factor.hpp"
+#include "mg400_msgs/action/mov_j.hpp"
+#include "mg400_msgs/action/mov_l.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+#include "techshare_ros_pkg2/action/empty.hpp"
 
-MG400ControlNode::MG400ControlNode()
-: Node("mg400_control_node"),
-  action_server_(rclcpp_action::create_server<techshare_ros_pkg2::action::Empty>(
-      this->get_node_base_interface(),
-      this->get_node_clock_interface(),
-      this->get_node_logging_interface(),
-      this->get_node_waitables_interface(),
-      "mg400_server",
-      std::bind(&MG400ControlNode::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
-      std::bind(&MG400ControlNode::handle_cancel, this, std::placeholders::_1),
-      std::bind(&MG400ControlNode::handle_accepted, this, std::placeholders::_1)))
+struct Quaternion {
+    double x, y, z, w;
+};
+
+
+class MG400ControlNode : public rclcpp::Node
 {
-    clear_error_client = node->create_client<mg400_msgs::srv::ClearError>("/mg400/clear_error");
-    enable_robot_client = node->create_client<mg400_msgs::srv::EnableRobot>("/mg400/enable_robot");
-    disable_robot_client = node->create_client<mg400_msgs::srv::DisableRobot>("/mg400/disable_robot");
-    speed_factor_client = node->create_client<mg400_msgs::srv::SpeedFactor>("/mg400/speed_factor");
+public:
+    MG400ControlNode()
+    : Node("mg400_control_node"),
+      action_server_(rclcpp_action::create_server<techshare_ros_pkg2::action::Empty>(
+          this->get_node_base_interface(),
+          this->get_node_clock_interface(),
+          this->get_node_logging_interface(),
+          this->get_node_waitables_interface(),
+          "mg400_server",
+          std::bind(&MG400ControlNode::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
+          std::bind(&MG400ControlNode::handle_cancel, this, std::placeholders::_1),
+          std::bind(&MG400ControlNode::handle_accepted, this, std::placeholders::_1)))
+    {
 
-    mov_j_action_client = rclcpp_action::create_client<mg400_msgs::action::MovJ>(node, "/mg400/mov_j");
-    mov_l_action_client = rclcpp_action::create_client<mg400_msgs::action::MovL>(node, "/mg400/mov_l");
 
-}
+        clear_error_client = node->create_client<mg400_msgs::srv::ClearError>("/mg400/clear_error");
+        enable_robot_client = node->create_client<mg400_msgs::srv::EnableRobot>("/mg400/enable_robot");
+        disable_robot_client = node->create_client<mg400_msgs::srv::DisableRobot>("/mg400/disable_robot");
+        speed_factor_client = node->create_client<mg400_msgs::srv::SpeedFactor>("/mg400/speed_factor");
 
-// Then, include the rest of your method definitions in this file...
+        mov_j_action_client = rclcpp_action::create_client<mg400_msgs::action::MovJ>(node, "/mg400/mov_j");
+        mov_l_action_client = rclcpp_action::create_client<mg400_msgs::action::MovL>(node, "/mg400/mov_l");
 
+    }
 
-rclcpp_action::GoalResponse MG400ControlNode::handle_goal(
-    const std::array<unsigned char, 16>& uuid,
-    std::shared_ptr<const techshare_ros_pkg2::action::Empty::Goal> goal){
+private:
+    std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("mg400_move_server");
+    rclcpp::Client<mg400_msgs::srv::ClearError>::SharedPtr clear_error_client;
+    rclcpp::Client<mg400_msgs::srv::EnableRobot>::SharedPtr enable_robot_client;
+    rclcpp::Client<mg400_msgs::srv::DisableRobot>::SharedPtr disable_robot_client;
+    rclcpp::Client<mg400_msgs::srv::SpeedFactor>::SharedPtr speed_factor_client;
+
+    rclcpp_action::Client<mg400_msgs::action::MovJ>::SharedPtr mov_j_action_client;
+    rclcpp_action::Client<mg400_msgs::action::MovL>::SharedPtr mov_l_action_client;
+    rclcpp_action::Server<techshare_ros_pkg2::action::Empty>::SharedPtr action_server_;
+
+    rclcpp_action::GoalResponse handle_goal(
+      const std::array<unsigned char, 16>& uuid,
+      std::shared_ptr<const techshare_ros_pkg2::action::Empty::Goal> goal)
+      {     
             RCLCPP_INFO(this->get_logger(), "Received goal request %d", goal->fake);
             (void)uuid;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-    }
 
-rclcpp_action::CancelResponse MG400ControlNode::handle_cancel(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle){
+      }
+
+    rclcpp_action::CancelResponse handle_cancel(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle)
+      {
         RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
         (void)goal_handle;
         return rclcpp_action::CancelResponse::ACCEPT;
-    }
+      }
 
-void MG400ControlNode::handle_accepted(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle){
+    void handle_accepted(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle)
+      {
         using namespace std::placeholders;
         // this needs to return quickly to avoid blocking the executor, so spin up a new thread
         RCLCPP_INFO(this->get_logger(), "Accepted a goal:)");
         std::thread{std::bind(&MG400ControlNode::execute, this, _1), goal_handle}.detach();
+      };
+    
+    Quaternion YawToQuaternion(double yaw) {
+        Quaternion q;
+        q.x = 0;
+        q.y = sin(yaw / 2);
+        q.z = 0;
+        q.w = cos(yaw / 2);
+        return q;
     }
 
-
-Quaternion MG400ControlNode::YawToQuaternion(double yaw) {
-    Quaternion q;
-    q.x = 0;
-    q.y = sin(yaw / 2);
-    q.z = 0;
-    q.w = cos(yaw / 2);
-    return q;
-}
-
-void MG400ControlNode::execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle){
+    void execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<techshare_ros_pkg2::action::Empty>> goal_handle){
         auto result = std::make_shared<techshare_ros_pkg2::action::Empty::Result>();
         // // Clear error
         auto clear_error_request = std::make_shared<mg400_msgs::srv::ClearError::Request>();
@@ -200,6 +231,8 @@ void MG400ControlNode::execute(const std::shared_ptr<rclcpp_action::ServerGoalHa
         RCLCPP_INFO(this->get_logger(), "Action completed");
 }
 
+};
+
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
@@ -210,9 +243,3 @@ int main(int argc, char **argv)
     rclcpp::shutdown();
     return 0;
 }
-
-
-
-
-
-
