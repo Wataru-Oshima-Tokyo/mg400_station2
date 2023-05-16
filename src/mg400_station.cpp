@@ -155,8 +155,8 @@ private:
         
         for (int i=0; i<10;i++){
             auto mov_j_goal = mg400_msgs::action::MovJ::Goal();
-            // mov_j_goal.pose.header.frame_id = "mg400_origin_link";
-            mov_j_goal.pose.header.frame_id = "mg400_end_effector_flange";
+            mov_j_goal.pose.header.frame_id = "mg400_origin_link";
+            // mov_j_goal.pose.header.frame_id = "mg400_end_effector_flange";
             mov_j_goal.pose.pose.position.x = 0.25 + 0.01*i;
             Quaternion q; 
             if (i % 2 == 0) {
@@ -164,10 +164,10 @@ private:
             } else {
                 q = YawToQuaternion(i*10);
             }
-            // mov_j_goal.pose.pose.orientation.w = q.w;
-            // mov_j_goal.pose.pose.orientation.x = q.x;
-            // mov_j_goal.pose.pose.orientation.y = q.y;
-            // mov_j_goal.pose.pose.orientation.z = q.z;
+            mov_j_goal.pose.pose.orientation.w = q.w;
+            mov_j_goal.pose.pose.orientation.x = q.x;
+            mov_j_goal.pose.pose.orientation.y = q.y;
+            mov_j_goal.pose.pose.orientation.z = q.z;
             
             auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
 
