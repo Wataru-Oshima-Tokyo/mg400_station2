@@ -168,7 +168,7 @@ private:
             mov_j_goal.pose.pose.orientation.x = q.x;
             mov_j_goal.pose.pose.orientation.y = q.y;
             mov_j_goal.pose.pose.orientation.z = q.z;
-            
+            RCLCPP_INFO(node->get_logger(), "Orientation: x=%f, y=%f, z=%f, w=%f", q.x, q.y, q.z, q.w);
             auto mov_j_goal_handle_future = mov_j_action_client->async_send_goal(mov_j_goal);
 
             if (rclcpp::spin_until_future_complete(node, mov_j_goal_handle_future) !=
